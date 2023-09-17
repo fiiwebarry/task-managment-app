@@ -1,33 +1,70 @@
 import icon from "/src/assets/Images/task-manager.avif";
-import { useState } from 'react';
+import { useReducer } from 'react';
 import './App.css';
+
+
+
+const defaultState = {
+
+  todolist: [],
+  newTask: "",
+  dueDate: "",
+};
+
+
+const reducer = (state, action) => {
+  if (action.type === CLEAR_LIST) {
+
+    return { ...state, todolist: [], newTask: "", dueDate: "" }
+  }
+  if (action.type === DELETE_ITEM) {
+    let newList = state.todolist.filter((task) => task.id !== action.payload.id);
+    return { ...state, todolist: newList }
+
+  }
+  if (action.type === 'SET_NEW_TASK') {
+    return { ...state, newTask: action.payload }
+  }
+  if (action.type === 'SET_DUE_DATE') {
+    return { ...state, dueDate: action.payload }
+  }
+  if (action.type === ADD_TASK) {
+    const task = {
+      id: state.todolist.length === 0 ? 1 : state.todolist[state.todolist.length - 1].id + 1,
+      TaskName: state.newTask,
+      Datedue: state.dueDate,
+    };
+    return { ...state, todolist: [...state.todolist, task], newTask: "", dueDate: "" };
+  }
+  return state;
+}
+const ADD_TASK = "ADD_TASK";
+const DELETE_ITEM = "DELETE_ITEM";
+const CLEAR_LIST = "CLEAR_LIST";
+
+
+
 
 function App() {
 
-
-  const [todolist, setTodoList] = useState([]);
-  const [newTask, setNewTask] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [state, dispatch] = useReducer(reducer, defaultState)
 
 
   const onClickHandler = () => {
-    if (!newTask || !dueDate) {
+
+    if (!state.newTask || !state.dueDate) {
       return
     }
-    const task = {
-      id: todolist.length === 0 ? 1 : todolist[todolist.length - 1].id + 1,
-      TaskName: newTask,
-      Datedue: dueDate,
-    };
 
-    setTodoList([...todolist, task])
-    setNewTask("");
-    setDueDate("");
+
+    dispatch({ type: ADD_TASK });
+
   };
 
-
   const deleteButton = (id) => {
-    setTodoList(todolist.filter((task) => task.id !== id));
+
+    dispatch({ type: DELETE_ITEM, payload: { id } })
+
   };
 
 
@@ -47,12 +84,12 @@ function App() {
               <div className="new-task">
                 <label htmlFor="task">ADD TASK:</label><br /><br />
 
-                <input type="text" id="task" value={newTask} onChange={(e) => setNewTask(e.target.value)} />
+                <input type="text" id="task" value={state.newTask} onChange={(e) => dispatch({ type: "SET_NEW_TASK", payload: e.target.value })} />
               </div>
 
               <div className="task-due">
                 <label htmlFor="duedate">TASK DUE DATE:</label><br /><br />
-                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                <input type="date" value={state.dueDate} onChange={(e) => dispatch({ type: 'SET_DUE_DATE', payload: e.target.value })} />
               </div>
 
             </div>
@@ -67,9 +104,9 @@ function App() {
 
       <div className="task-layout">
         <div className='task-tab'>
-          {todolist.map((task) => {
+          {state.todolist.map((task) => {
 
-            // const {id,TaskName,Datedue}=task;
+
             return (
               <div className='header-tab' key={task.id}>
                 <h2 className="font"><span>TASK:</span> {task.TaskName}</h2><br />
